@@ -2,7 +2,7 @@
 use super::*;
 
 use gut::prelude::*;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 // 7643ea86 ends here
 
 // [[file:../gosh-shell.note::f90f0bfb][f90f0bfb]]
@@ -10,14 +10,14 @@ mod helper;
 // f90f0bfb ends here
 
 // [[file:../gosh-shell.note::845cbd1e][845cbd1e]]
-use rustyline::Editor;
+use rustyline::{history::FileHistory, Editor};
 
 /// An shell-like REPL interpreter.
 pub struct Interpreter<A: Actionable> {
     prompt: String,
     history_file: Option<PathBuf>,
 
-    editor: Editor<helper::MyHelper>,
+    editor: Editor<helper::MyHelper, FileHistory>,
     action: A,
 }
 // 845cbd1e ends here
@@ -53,21 +53,21 @@ impl<A: Actionable> Interpreter<A> {
     }
 }
 
-fn create_readline_editor() -> Editor<helper::MyHelper> {
+fn create_readline_editor() -> Result<Editor<helper::MyHelper, FileHistory>> {
     use rustyline::{ColorMode, CompletionType, Config, Editor};
 
     let config = Config::builder()
         .color_mode(rustyline::ColorMode::Enabled)
         .completion_type(CompletionType::Fuzzy)
-        .history_ignore_dups(true)
+        .history_ignore_dups(true)?
         .history_ignore_space(true)
-        .max_history_size(1000)
+        .max_history_size(1000)?
         .build();
 
-    let mut rl = Editor::with_config(config);
+    let mut rl = Editor::with_config(config)?;
     let h = self::helper::MyHelper::new();
     rl.set_helper(Some(h));
-    rl
+    Ok(rl)
 }
 
 impl<A: Actionable> Interpreter<A> {
@@ -152,10 +152,11 @@ pub trait HelpfulCommand {
 }
 
 impl<A: Actionable> Interpreter<A> {
+    #[track_caller]
     pub fn new(action: A) -> Self {
         Self {
             prompt: "> ".to_string(),
-            editor: create_readline_editor(),
+            editor: create_readline_editor().unwrap(),
             history_file: None,
             action,
         }
@@ -192,44 +193,49 @@ impl<A: Actionable> Interpreter<A> {
 }
 // f3bcb018 ends here
 
-// [[file:../gosh-shell.note::dc949951][dc949951]]
-use gut::cli::*;
-use std::path::PathBuf;
+// [[file:../gosh-shell.note::f12dda7e][f12dda7e]]
+pub mod cli {
+    use super::*;
+    use gut::cli::*;
+    use std::path::PathBuf;
 
-#[derive(Parser, Debug)]
-struct GoshParser {
-    /// Execute gosh-parser script
-    #[clap(short = 'x')]
-    script_file: Option<PathBuf>,
+    #[derive(Parser, Debug)]
+    pub struct ReplCli {
+        /// Execute gosh-parser script
+        #[clap(short = 'x')]
+        script_file: Option<PathBuf>,
 
-    #[clap(flatten)]
-    verbose: Verbosity,
-}
-
-pub fn repl_enter_main() -> Result<()> {
-    let args: Vec<String> = std::env::args().collect();
-
-    let action = crate::parser::Action::default();
-    // entry shell mode or subcommands mode
-    if args.len() > 1 {
-        let args = GoshParser::parse();
-        args.verbose.setup_logger();
-
-        if let Some(script_file) = &args.script_file {
-            info!("Execute script file: {:?}", script_file);
-            Interpreter::new(action).interpret_script_file(script_file)?;
-        } else {
-            info!("Reading batch script from stdin ..");
-            use std::io::{self, Read};
-
-            let mut buffer = String::new();
-            std::io::stdin().read_to_string(&mut buffer)?;
-            Interpreter::new(action).interpret_script(&buffer)?;
-        }
-    } else {
-        Interpreter::new(action).with_prompt("gosh-parser> ").start_repl()?;
+        #[clap(flatten)]
+        verbose: Verbosity,
     }
 
-    Ok(())
+    impl ReplCli {
+        pub fn enter_main() -> Result<()> {
+            let args: Vec<String> = std::env::args().collect();
+
+            let action = crate::parser::Action::default();
+            // enter shell mode or subcommands mode
+            if args.len() > 1 {
+                let args = Self::parse();
+                args.verbose.setup_logger();
+
+                if let Some(script_file) = &args.script_file {
+                    info!("Execute script file: {:?}", script_file);
+                    Interpreter::new(action).interpret_script_file(script_file)?;
+                } else {
+                    info!("Reading batch script from stdin ..");
+                    use std::io::{self, Read};
+
+                    let mut buffer = String::new();
+                    std::io::stdin().read_to_string(&mut buffer)?;
+                    Interpreter::new(action).interpret_script(&buffer)?;
+                }
+            } else {
+                Interpreter::new(action).with_prompt("gosh-parser> ").start_repl()?;
+            }
+
+            Ok(())
+        }
+    }
 }
-// dc949951 ends here
+// f12dda7e ends here

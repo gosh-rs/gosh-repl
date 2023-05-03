@@ -9,7 +9,7 @@ mod repl;
 // mod skim;
 // 88743546 ends here
 
-// [[file:../gosh-shell.note::*docs][docs:1]]
+// [[file:../gosh-shell.note::67e2867b][67e2867b]]
 #[cfg(feature = "adhoc")]
 /// Docs for local mods
 pub mod docs {
@@ -21,6 +21,11 @@ pub mod docs {
         };
     }
 
-    // export_doc!(codec);
+    export_doc!(repl);
+    export_doc!(parser);
 }
-// docs:1 ends here
+// 67e2867b ends here
+
+// [[file:../gosh-shell.note::9cc4dec6][9cc4dec6]]
+pub use repl::cli::*;
+// 9cc4dec6 ends here
