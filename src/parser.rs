@@ -6,6 +6,7 @@ use gut::prelude::*;
 use gut::cli::*;
 
 #[derive(Parser, Debug)]
+#[clap(disable_help_subcommand = true)]
 pub enum Cmd {
     /// Quit shell.
     #[clap(name = "quit", alias = "q", alias = "exit")]
@@ -72,18 +73,6 @@ pub enum Cmd {
 // 724d9a95 ends here
 
 // [[file:../gosh-shell.note::a252f98f][a252f98f]]
-#[derive(Debug, Clone)]
-struct Selection {
-    line_beg: usize,
-    line_end: usize,
-}
-
-#[derive(Debug, Clone)]
-pub struct Glance {
-    selections: Vec<Selection>,
-}
-
-
 #[derive(Debug, Default, Clone)]
 pub struct Action {
     // glance: Option<Glance>,
@@ -101,22 +90,18 @@ impl crate::repl::Actionable for Action {
         Ok(r)
     }
 
-    /// Take action on gosh-parser commands. Return Ok(true) will exit shell
+    /// Take action on REPL commands. Return Ok(true) will exit shell
     /// loop.
     fn act_on(&mut self, cmd: &Cmd) -> Result<bool> {
         match cmd {
             Cmd::Quit {} => return Ok(true),
+
             Cmd::Help {} => {
                 let mut app = Cmd::command();
                 app.print_help();
                 println!("");
             }
-            Cmd::Load { path } => {
-                // self.glance = Glance::try_from_path(path.as_ref())?.into();
-            }
-            Cmd::Println { text } => {
-                println!("{}", text);
-            }
+
             o => {
                 eprintln!("{:?}: not implemented yet!", o);
             }

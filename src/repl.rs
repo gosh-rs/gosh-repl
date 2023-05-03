@@ -28,7 +28,7 @@ impl<A: Actionable> Interpreter<A> {
     fn continue_interpret_line(&mut self, line: &str) -> bool {
         if let Some(mut args) = shlex::split(line) {
             assert!(args.len() >= 1);
-            args.insert(0, "gosh-parser".into());
+            args.insert(0, "gosh".into());
 
             match A::try_parse_from(&args) {
                 // apply subcommand
@@ -231,7 +231,7 @@ pub mod cli {
                     Interpreter::new(action).interpret_script(&buffer)?;
                 }
             } else {
-                Interpreter::new(action).with_prompt("gosh-parser> ").start_repl()?;
+                Interpreter::new(action).with_prompt("gosh> ").start_repl()?;
             }
 
             Ok(())
