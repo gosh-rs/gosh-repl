@@ -13,22 +13,22 @@ mod helper;
 use rustyline::{history::FileHistory, Editor};
 
 /// An shell-like REPL interpreter.
-pub struct Interpreter<A: Actionable> {
+pub struct Interpreter<R: HelpfulCommand, A> {
     prompt: String,
     history_file: Option<PathBuf>,
 
-    editor: Editor<helper::MyHelper, FileHistory>,
+    editor: Editor<helper::MyHelper<R>, FileHistory>,
     action: A,
 }
 // 845cbd1e ends here
 
 // [[file:../gosh-shell.note::aa47dc5f][aa47dc5f]]
-impl<A: Actionable> Interpreter<A> {
+impl<R: HelpfulCommand, A: Actionable> Interpreter<R, A> {
     /// Interpret one line.
     fn continue_interpret_line(&mut self, line: &str) -> bool {
         if let Some(mut args) = shlex::split(line) {
             assert!(args.len() >= 1);
-            args.insert(0, "gosh".into());
+            args.insert(0, self.prompt.to_owned());
 
             match A::try_parse_from(&args) {
                 // apply subcommand
@@ -47,30 +47,11 @@ impl<A: Actionable> Interpreter<A> {
             }
             true
         } else {
-            dbg!(line);
+            eprintln!("Invalid quoting: {line:?}");
             false
         }
     }
-}
 
-fn create_readline_editor() -> Result<Editor<helper::MyHelper, FileHistory>> {
-    use rustyline::{ColorMode, CompletionType, Config, Editor};
-
-    let config = Config::builder()
-        .color_mode(rustyline::ColorMode::Enabled)
-        .completion_type(CompletionType::Fuzzy)
-        .history_ignore_dups(true)?
-        .history_ignore_space(true)
-        .max_history_size(1000)?
-        .build();
-
-    let mut rl = Editor::with_config(config)?;
-    let h = self::helper::MyHelper::new();
-    rl.set_helper(Some(h));
-    Ok(rl)
-}
-
-impl<A: Actionable> Interpreter<A> {
     fn continue_read_eval_print(&mut self) -> bool {
         match self.editor.readline(&self.prompt) {
             Err(rustyline::error::ReadlineError::Eof) => false,
@@ -90,10 +71,27 @@ impl<A: Actionable> Interpreter<A> {
         }
     }
 }
+
+fn create_readline_editor<R: HelpfulCommand>() -> Result<Editor<helper::MyHelper<R>, FileHistory>> {
+    use rustyline::{ColorMode, CompletionType, Config, Editor};
+
+    let config = Config::builder()
+        .color_mode(rustyline::ColorMode::Enabled)
+        .completion_type(CompletionType::Fuzzy)
+        .history_ignore_dups(true)?
+        .history_ignore_space(true)
+        .max_history_size(1000)?
+        .build();
+
+    let mut rl = Editor::with_config(config)?;
+    let h = self::helper::MyHelper::new();
+    rl.set_helper(Some(h));
+    Ok(rl)
+}
 // aa47dc5f ends here
 
 // [[file:../gosh-shell.note::360871b3][360871b3]]
-impl<A: Actionable> Interpreter<A> {
+impl<R: HelpfulCommand, A: Actionable> Interpreter<R, A> {
     fn load_history(&mut self) -> Result<()> {
         if let Some(h) = self.history_file.as_ref() {
             self.editor.load_history(h).context("no history")?;
@@ -111,7 +109,7 @@ impl<A: Actionable> Interpreter<A> {
 // 360871b3 ends here
 
 // [[file:../gosh-shell.note::05b99d70][05b99d70]]
-impl<A: Actionable> Interpreter<A> {
+impl<R: HelpfulCommand, A: Actionable> Interpreter<R, A> {
     pub fn interpret_script(&mut self, script: &str) -> Result<()> {
         let lines = script.lines().filter(|s| !s.trim().is_empty());
         for line in lines {
@@ -132,7 +130,7 @@ impl<A: Actionable> Interpreter<A> {
 }
 // 05b99d70 ends here
 
-// [[file:../gosh-shell.note::f3bcb018][f3bcb018]]
+// [[file:../gosh-shell.note::9fdf556e][9fdf556e]]
 pub trait Actionable {
     type Command;
 
@@ -148,20 +146,37 @@ pub trait Actionable {
 
 pub trait HelpfulCommand {
     fn get_subcommands() -> Vec<String>;
-    fn suitable_for_path_complete(line: &str) -> bool;
+    fn suitable_for_path_complete(line: &str, pos: usize) -> bool;
 }
 
-impl<A: Actionable> Interpreter<A> {
+impl<T: clap::CommandFactory> HelpfulCommand for T {
+    fn get_subcommands() -> Vec<String> {
+        let app = Self::command();
+        app.get_subcommands().map(|s| s.get_name().into()).collect()
+    }
+
+    fn suitable_for_path_complete(line: &str, pos: usize) -> bool {
+        let s = &line[..pos];
+        // FIXME: not work for windows
+        s.ends_with("/")
+    }
+}
+// 9fdf556e ends here
+
+// [[file:../gosh-shell.note::f3bcb018][f3bcb018]]
+impl<R: HelpfulCommand, A: Actionable> Interpreter<R, A> {
     #[track_caller]
     pub fn new(action: A) -> Self {
         Self {
             prompt: "> ".to_string(),
-            editor: create_readline_editor().unwrap(),
+            editor: create_readline_editor::<R>().unwrap(),
             history_file: None,
             action,
         }
     }
+}
 
+impl<R: HelpfulCommand, A: Actionable> Interpreter<R, A> {
     /// Set absolute path to history file for permanently storing command history.
     pub fn with_history_file<P: Into<PathBuf>>(mut self, path: P) -> Self {
         let p = path.into();

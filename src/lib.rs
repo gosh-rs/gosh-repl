@@ -28,4 +28,6 @@ pub mod docs {
 
 // [[file:../gosh-shell.note::9cc4dec6][9cc4dec6]]
 pub use parser::cli::*;
+
+pub use repl::Interpreter;
 // 9cc4dec6 ends here
