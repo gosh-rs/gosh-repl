@@ -1,0 +1,26 @@
+# [[file:gosh-shell.note::e345323a][e345323a]]
+[package]
+name = "gosh-shell"
+version = "0.0.1"
+edition = "2021"
+authors = ["Wenping Guo <ybyygu@gmail.com>"]
+description = "short text for crates.io"
+license = "GPL-3.0"
+homepage = "https://github.com/gosh-rs/gosh"
+repository = "https://github.com/gosh-rs/gosh"
+
+[dependencies]
+clap = { version = "4", features = ["derive", "env"] }
+gut = { version = "0.4", package = "gchemol-gut" }
+reedline = "0.19.0"
+rustyline = {version = "9.1", features = ["with-fuzzy"]}
+rustyline-derive = "0.6"
+shlex = "1"
+
+# workspace independent
+# [workspace]
+
+[features]
+# for adhoc hacking
+adhoc = []
+# e345323a ends here
