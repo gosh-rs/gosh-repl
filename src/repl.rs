@@ -112,7 +112,7 @@ impl<A: Actionable> Interpreter<A> {
 
 // [[file:../gosh-shell.note::05b99d70][05b99d70]]
 impl<A: Actionable> Interpreter<A> {
-    fn interpret_script(&mut self, script: &str) -> Result<()> {
+    pub fn interpret_script(&mut self, script: &str) -> Result<()> {
         let lines = script.lines().filter(|s| !s.trim().is_empty());
         for line in lines {
             debug!("Execute: {:?}", line);
@@ -124,7 +124,7 @@ impl<A: Actionable> Interpreter<A> {
         Ok(())
     }
 
-    fn interpret_script_file(&mut self, script_file: &Path) -> Result<()> {
+    pub fn interpret_script_file(&mut self, script_file: &Path) -> Result<()> {
         let s = gut::fs::read_file(script_file)?;
         self.interpret_script(&s)?;
         Ok(())
@@ -192,50 +192,3 @@ impl<A: Actionable> Interpreter<A> {
     }
 }
 // f3bcb018 ends here
-
-// [[file:../gosh-shell.note::f12dda7e][f12dda7e]]
-pub mod cli {
-    use super::*;
-    use gut::cli::*;
-    use std::path::PathBuf;
-
-    #[derive(Parser, Debug)]
-    pub struct ReplCli {
-        /// Execute gosh-parser script
-        #[clap(short = 'x')]
-        script_file: Option<PathBuf>,
-
-        #[clap(flatten)]
-        verbose: Verbosity,
-    }
-
-    impl ReplCli {
-        pub fn enter_main() -> Result<()> {
-            let args: Vec<String> = std::env::args().collect();
-
-            let action = crate::parser::Action::default();
-            // enter shell mode or subcommands mode
-            if args.len() > 1 {
-                let args = Self::parse();
-                args.verbose.setup_logger();
-
-                if let Some(script_file) = &args.script_file {
-                    info!("Execute script file: {:?}", script_file);
-                    Interpreter::new(action).interpret_script_file(script_file)?;
-                } else {
-                    info!("Reading batch script from stdin ..");
-                    use std::io::{self, Read};
-
-                    let mut buffer = String::new();
-                    std::io::stdin().read_to_string(&mut buffer)?;
-                    Interpreter::new(action).interpret_script(&buffer)?;
-                }
-            } else {
-                Interpreter::new(action).with_prompt("gosh> ").start_repl()?;
-            }
-
-            Ok(())
-        }
-    }
-}
-// f12dda7e ends here

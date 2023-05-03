@@ -27,5 +27,5 @@ pub mod docs {
 // 67e2867b ends here
 
 // [[file:../gosh-shell.note::9cc4dec6][9cc4dec6]]
-pub use repl::cli::*;
+pub use parser::cli::*;
 // 9cc4dec6 ends here

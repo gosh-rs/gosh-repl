@@ -74,7 +74,7 @@ pub enum Cmd {
 
 // [[file:../gosh-shell.note::a252f98f][a252f98f]]
 #[derive(Debug, Default, Clone)]
-pub struct Action {
+struct Action {
     // glance: Option<Glance>,
 }
 
@@ -124,3 +124,52 @@ impl crate::repl::HelpfulCommand for Cmd {
     }
 }
 // f8cc322b ends here
+
+// [[file:../gosh-shell.note::f12dda7e][f12dda7e]]
+pub mod cli {
+    use super::Action;
+    use crate::repl::Interpreter;
+    use gut::cli::*;
+    use gut::prelude::*;
+    use std::path::PathBuf;
+
+    #[derive(Parser, Debug)]
+    pub struct ReplCli {
+        /// Execute REPL script
+        #[clap(short = 'x')]
+        script_file: Option<PathBuf>,
+
+        #[clap(flatten)]
+        verbose: Verbosity,
+    }
+
+    impl ReplCli {
+        pub fn enter_main() -> Result<()> {
+            let args: Vec<String> = std::env::args().collect();
+
+            let action = Action::default();
+            // enter shell mode or subcommands mode
+            if args.len() > 1 {
+                let args = Self::parse();
+                args.verbose.setup_logger();
+
+                if let Some(script_file) = &args.script_file {
+                    info!("Execute script file: {:?}", script_file);
+                    Interpreter::new(action).interpret_script_file(script_file)?;
+                } else {
+                    info!("Reading batch script from stdin ..");
+                    use std::io::{self, Read};
+
+                    let mut buffer = String::new();
+                    std::io::stdin().read_to_string(&mut buffer)?;
+                    Interpreter::new(action).interpret_script(&buffer)?;
+                }
+            } else {
+                Interpreter::new(action).with_prompt("gosh> ").start_repl()?;
+            }
+
+            Ok(())
+        }
+    }
+}
+// f12dda7e ends here

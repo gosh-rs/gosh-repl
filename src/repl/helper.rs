@@ -1,5 +1,6 @@
 // [[file:../../gosh-shell.note::e0fe07d2][e0fe07d2]]
 use super::*;
+// FIXME: remove
 use crate::parser::Cmd;
 
 use rustyline::completion::{FilenameCompleter, Pair};

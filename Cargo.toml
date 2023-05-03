@@ -1,7 +1,7 @@
 # [[file:gosh-shell.note::e345323a][e345323a]]
 [package]
 name = "gosh-repl"
-version = "0.0.1"
+version = "0.1.0"
 edition = "2021"
 authors = ["Wenping Guo <ybyygu@gmail.com>"]
 description = "short text for crates.io"
@@ -12,7 +12,7 @@ repository = "https://github.com/gosh-rs/gosh"
 [dependencies]
 clap = { version = "4.2", features = ["derive", "env"] }
 gut = { version = "0.4", package = "gchemol-gut" }
-reedline = "0.19.0"
+# reedline = "0.19.0"
 rustyline = {version = "11", features = ["with-fuzzy"]}
 rustyline-derive = "0.8"
 shlex = "1"
