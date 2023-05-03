@@ -3,9 +3,6 @@ use super::*;
 
 use gut::prelude::*;
 use std::path::Path;
-
-use crate::parser::Action;
-use crate::parser::Cmd;
 // 7643ea86 ends here
 
 // [[file:../gosh-shell.note::f90f0bfb][f90f0bfb]]
@@ -212,7 +209,7 @@ struct GoshParser {
 pub fn repl_enter_main() -> Result<()> {
     let args: Vec<String> = std::env::args().collect();
 
-    let action = Action::default();
+    let action = crate::parser::Action::default();
     // entry shell mode or subcommands mode
     if args.len() > 1 {
         let args = GoshParser::parse();
