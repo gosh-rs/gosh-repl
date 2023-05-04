@@ -109,7 +109,7 @@ mod cli {
                     Interpreter::new(action).interpret_script(&buffer)?;
                 }
             } else {
-                Interpreter::new(action).with_prompt("gosh> ").start_repl::<Cmd>()?;
+                Interpreter::new(action).with_prompt("gosh> ").run::<Cmd>()?;
             }
 
             Ok(())
