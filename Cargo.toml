@@ -1,13 +1,13 @@
 # [[file:gosh-shell.note::e345323a][e345323a]]
 [package]
 name = "gosh-repl"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Wenping Guo <ybyygu@gmail.com>"]
-description = "short text for crates.io"
+description = "A REPL framework for gosh project "
 license = "GPL-3.0"
-homepage = "https://github.com/gosh-rs/gosh"
-repository = "https://github.com/gosh-rs/gosh"
+homepage = "https://github.com/gosh-rs/gosh-repl"
+repository = "https://github.com/gosh-rs/gosh-repl"
 
 [dependencies]
 clap = { version = "4.2", features = ["derive"] }
