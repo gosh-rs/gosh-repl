@@ -154,10 +154,13 @@ impl<T: clap::CommandFactory> HelpfulCommand for T {
         app.get_subcommands().map(|s| s.get_name().into()).collect()
     }
 
+    /// try to complete when current char is a path separator: foo ./
     fn suitable_for_path_complete(line: &str, pos: usize) -> bool {
-        let s = &line[..pos];
-        // FIXME: not work for windows
-        s.ends_with("/")
+        line[..pos]
+            .chars()
+            .last()
+            .map(|x| std::path::is_separator(x))
+            .unwrap_or(false)
     }
 }
 // 9fdf556e ends here
