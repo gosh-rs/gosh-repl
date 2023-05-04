@@ -5,15 +5,13 @@ use std::marker::PhantomData;
 use rustyline::completion::{FilenameCompleter, Pair};
 use rustyline::error::ReadlineError;
 use rustyline::Context;
-use rustyline_derive::{Completer, Helper, Highlighter, Validator};
+use rustyline_derive::{Helper, Highlighter, Validator};
 
 #[derive(Helper, Highlighter, Validator)]
 pub struct MyHelper<R: HelpfulCommand> {
-    #[rustyline(Completer)]
     completer: FilenameCompleter,
-    colored_prompt: String,
     // for advanced completion
-    _R: PhantomData<R>,
+    _r: PhantomData<R>,
 }
 
 impl<R: HelpfulCommand> rustyline::completion::Completer for MyHelper<R> {
@@ -43,8 +41,7 @@ impl<R: HelpfulCommand> MyHelper<R> {
     pub fn new() -> Self {
         Self {
             completer: FilenameCompleter::new(),
-            colored_prompt: "".to_owned(),
-            _R: PhantomData,
+            _r: PhantomData,
         }
     }
 }
@@ -52,7 +49,7 @@ impl<R: HelpfulCommand> MyHelper<R> {
 impl<R: HelpfulCommand> rustyline::hint::Hinter for MyHelper<R> {
     type Hint = String;
 
-    fn hint(&self, line: &str, pos: usize, ctx: &Context<'_>) -> Option<String> {
+    fn hint(&self, _line: &str, _pos: usize, _ctx: &Context<'_>) -> Option<String> {
         None
     }
 }

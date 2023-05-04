@@ -10,7 +10,7 @@ homepage = "https://github.com/gosh-rs/gosh"
 repository = "https://github.com/gosh-rs/gosh"
 
 [dependencies]
-clap = { version = "4.2", features = ["derive", "env"] }
+clap = { version = "4.2", features = ["derive"] }
 gut = { version = "0.4", package = "gchemol-gut" }
 # reedline = "0.19.0"
 rustyline = {version = "11", features = ["with-fuzzy"]}

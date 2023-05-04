@@ -12,15 +12,15 @@ use gut::prelude::*;
 #[clap(disable_help_subcommand = true)]
 enum Cmd {
     /// Quit shell.
-    #[clap(name = "quit", alias = "q", alias = "exit")]
+    #[command(name = "quit", alias = "q", alias = "exit")]
     Quit {},
 
     /// Show available commands.
-    #[clap(name = "help", alias = "h", alias = "?")]
+    #[command(name = "help", alias = "h", alias = "?")]
     Help {},
 
     /// Load file from `path` for processing.
-    #[clap(name = "load")]
+    #[command(name = "load")]
     Load {
         #[clap(name = "FILENAME")]
         path: String,

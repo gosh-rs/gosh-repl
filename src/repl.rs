@@ -1,6 +1,4 @@
 // [[file:../gosh-shell.note::7643ea86][7643ea86]]
-use super::*;
-
 use gut::prelude::*;
 use std::path::{Path, PathBuf};
 // 7643ea86 ends here
@@ -57,7 +55,7 @@ impl<A: Actionable> Interpreter<A> {
             Ok(line) => {
                 let line = line.trim();
                 if !line.is_empty() {
-                    editor.add_history_entry(line);
+                    let _ = editor.add_history_entry(line);
                     self.continue_interpret_line(&line)
                 } else {
                     true
@@ -72,10 +70,10 @@ impl<A: Actionable> Interpreter<A> {
 }
 
 fn create_readline_editor<R: HelpfulCommand>() -> Result<Editor<helper::MyHelper<R>, FileHistory>> {
-    use rustyline::{ColorMode, CompletionType, Config, Editor};
+    use rustyline::{ColorMode, CompletionType, Config};
 
     let config = Config::builder()
-        .color_mode(rustyline::ColorMode::Enabled)
+        .color_mode(ColorMode::Enabled)
         .completion_type(CompletionType::Fuzzy)
         .history_ignore_dups(true)?
         .history_ignore_space(true)

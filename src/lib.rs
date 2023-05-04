@@ -1,5 +1,5 @@
 // [[file:../gosh-shell.note::83dd8964][83dd8964]]
-// #![deny(warnings)]
+#![deny(warnings)]
 #![deny(clippy::all)]
 // 83dd8964 ends here
 
