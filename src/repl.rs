@@ -72,9 +72,12 @@ impl<A: Actionable> Interpreter<A> {
 fn create_readline_editor<R: HelpfulCommand>() -> Result<Editor<helper::MyHelper<R>, FileHistory>> {
     use rustyline::{ColorMode, CompletionType, Config};
 
-    let config = Config::builder()
+    #[cfg(not(windows))]
+    let builder = Config::builder().completion_type(CompletionType::Fuzzy);
+    #[cfg(windows)]
+    let builder = Config::builder().completion_type(CompletionType::Circular);
+    let config = builder
         .color_mode(ColorMode::Enabled)
-        .completion_type(CompletionType::Fuzzy)
         .history_ignore_dups(true)?
         .history_ignore_space(true)
         .max_history_size(1000)?
