@@ -1,10 +1,13 @@
 // [[file:../gosh-shell.note::70d3dbdb][70d3dbdb]]
+#![deny(warnings)]
+
+use gosh_repl::{Actionable, Interpreter};
+
+use gut::cli::*;
 use gut::prelude::*;
 // 70d3dbdb ends here
 
 // [[file:../gosh-shell.note::724d9a95][724d9a95]]
-use gut::cli::*;
-
 #[derive(Parser, Debug)]
 #[clap(disable_help_subcommand = true)]
 enum Cmd {
@@ -28,10 +31,11 @@ enum Cmd {
 // [[file:../gosh-shell.note::a252f98f][a252f98f]]
 #[derive(Debug, Default, Clone)]
 struct Action {
-    state: Option<Vec<String>>,
+    // state var during REPL
+    _state: Option<Vec<String>>,
 }
 
-impl crate::repl::Actionable for Action {
+impl Actionable for Action {
     type Command = Cmd;
 
     /// parse REPL commands from shell line input using clap
@@ -52,7 +56,9 @@ impl crate::repl::Actionable for Action {
 
             Cmd::Help {} => {
                 let mut app = Cmd::command();
-                app.print_help();
+                if let Err(err) = app.print_help() {
+                    eprintln!("clap error: {err:?}");
+                }
                 println!("");
             }
 
@@ -67,11 +73,10 @@ impl crate::repl::Actionable for Action {
 // a252f98f ends here
 
 // [[file:../gosh-shell.note::f12dda7e][f12dda7e]]
-pub mod cli {
-    use super::{Action, Cmd};
-    use crate::repl::Interpreter;
-    use gut::cli::*;
-    use gut::prelude::*;
+mod cli {
+    #![deny(warnings)]
+
+    use super::*;
     use std::path::PathBuf;
 
     #[derive(Parser, Debug)]
@@ -99,8 +104,6 @@ pub mod cli {
                     Interpreter::new(action).interpret_script_file(script_file)?;
                 } else {
                     info!("Reading batch script from stdin ..");
-                    use std::io::{self, Read};
-
                     let mut buffer = String::new();
                     std::io::stdin().read_to_string(&mut buffer)?;
                     Interpreter::new(action).interpret_script(&buffer)?;
@@ -114,3 +117,10 @@ pub mod cli {
     }
 }
 // f12dda7e ends here
+
+// [[file:../gosh-shell.note::e817ae85][e817ae85]]
+fn main() -> Result<()> {
+    cli::ReplCli::enter_main()?;
+    Ok(())
+}
+// e817ae85 ends here

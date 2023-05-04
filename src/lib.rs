@@ -4,7 +4,6 @@
 // 83dd8964 ends here
 
 // [[file:../gosh-shell.note::88743546][88743546]]
-mod parser;
 mod repl;
 // mod skim;
 // 88743546 ends here
@@ -22,12 +21,9 @@ pub mod docs {
     }
 
     export_doc!(repl);
-    export_doc!(parser);
 }
 // 67e2867b ends here
 
 // [[file:../gosh-shell.note::9cc4dec6][9cc4dec6]]
-pub use parser::cli::*;
-
-pub use repl::Interpreter;
+pub use repl::{Actionable, Interpreter};
 // 9cc4dec6 ends here
