@@ -200,14 +200,14 @@ impl<A: Actionable> Interpreter<A> {
     }
 
     /// Entry point for REPL.
-    pub fn run<R: HelpfulCommand>(&mut self) -> Result<()> {
+    pub fn run(&mut self) -> Result<()> {
         let version = env!("CARGO_PKG_VERSION");
         println!("This is the interactive parser, version {}.", version);
         println!("Enter \"help\" or \"?\" for a list of commands.");
         println!("Press Ctrl-D or enter \"quit\" or \"q\" to exit.");
         println!("");
 
-        let mut editor = create_readline_editor::<R>()?;
+        let mut editor = create_readline_editor::<A::Command>()?;
         let _ = self.load_history(&mut editor);
         while self.continue_read_eval_print(&mut editor) {
             debug!("excuted one loop");
