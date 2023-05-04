@@ -128,19 +128,28 @@ impl<A: Actionable> Interpreter<A> {
 // 05b99d70 ends here
 
 // [[file:../gosh-shell.note::9fdf556e][9fdf556e]]
+/// Defines actions for REPL commands
 pub trait Actionable {
-    type Command;
+    type Command: clap::Parser;
 
-    /// Act on `cmd`
+    /// Take action on REPL commands. Return Ok(true) will exit shell
+    /// loop.
     fn act_on(&mut self, cmd: &Self::Command) -> Result<bool>;
 
     /// parse Command from shell line input.
     fn try_parse_from<I, T>(iter: I) -> Result<Self::Command>
     where
         I: IntoIterator<Item = T>,
-        T: Into<std::ffi::OsString> + Clone;
+        T: Into<std::ffi::OsString> + Clone,
+    {
+        use clap::Parser;
+
+        let r = Self::Command::try_parse_from(iter)?;
+        Ok(r)
+    }
 }
 
+/// Define command completion
 pub trait HelpfulCommand {
     fn get_subcommands() -> Vec<String>;
     fn suitable_for_path_complete(line: &str, pos: usize) -> bool;

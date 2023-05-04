@@ -38,16 +38,6 @@ struct Action {
 impl Actionable for Action {
     type Command = Cmd;
 
-    /// parse REPL commands from shell line input using clap
-    fn try_parse_from<I, T>(iter: I) -> Result<Self::Command>
-    where
-        I: IntoIterator<Item = T>,
-        T: Into<std::ffi::OsString> + Clone,
-    {
-        let r = Cmd::try_parse_from(iter)?;
-        Ok(r)
-    }
-
     /// Take action on REPL commands. Return Ok(true) will exit shell
     /// loop.
     fn act_on(&mut self, cmd: &Cmd) -> Result<bool> {
