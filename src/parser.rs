@@ -96,17 +96,17 @@ pub mod cli {
 
                 if let Some(script_file) = &args.script_file {
                     info!("Execute script file: {:?}", script_file);
-                    Interpreter::<Cmd, _>::new(action).interpret_script_file(script_file)?;
+                    Interpreter::new(action).interpret_script_file(script_file)?;
                 } else {
                     info!("Reading batch script from stdin ..");
                     use std::io::{self, Read};
 
                     let mut buffer = String::new();
                     std::io::stdin().read_to_string(&mut buffer)?;
-                    Interpreter::<Cmd, _>::new(action).interpret_script(&buffer)?;
+                    Interpreter::new(action).interpret_script(&buffer)?;
                 }
             } else {
-                Interpreter::<Cmd, _>::new(action).with_prompt("gosh> ").start_repl()?;
+                Interpreter::new(action).with_prompt("gosh> ").start_repl::<Cmd>()?;
             }
 
             Ok(())

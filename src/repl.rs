@@ -11,19 +11,18 @@ mod helper;
 
 // [[file:../gosh-shell.note::845cbd1e][845cbd1e]]
 use rustyline::{history::FileHistory, Editor};
+type MyEditor<R> = Editor<helper::MyHelper<R>, FileHistory>;
 
 /// An shell-like REPL interpreter.
-pub struct Interpreter<R: HelpfulCommand, A> {
+pub struct Interpreter<A> {
     prompt: String,
     history_file: Option<PathBuf>,
-
-    editor: Editor<helper::MyHelper<R>, FileHistory>,
     action: A,
 }
 // 845cbd1e ends here
 
 // [[file:../gosh-shell.note::aa47dc5f][aa47dc5f]]
-impl<R: HelpfulCommand, A: Actionable> Interpreter<R, A> {
+impl<A: Actionable> Interpreter<A> {
     /// Interpret one line.
     fn continue_interpret_line(&mut self, line: &str) -> bool {
         if let Some(mut args) = shlex::split(line) {
@@ -52,13 +51,13 @@ impl<R: HelpfulCommand, A: Actionable> Interpreter<R, A> {
         }
     }
 
-    fn continue_read_eval_print(&mut self) -> bool {
-        match self.editor.readline(&self.prompt) {
+    fn continue_read_eval_print<R: HelpfulCommand>(&mut self, editor: &mut MyEditor<R>) -> bool {
+        match editor.readline(&self.prompt) {
             Err(rustyline::error::ReadlineError::Eof) => false,
             Ok(line) => {
                 let line = line.trim();
                 if !line.is_empty() {
-                    self.editor.add_history_entry(line);
+                    editor.add_history_entry(line);
                     self.continue_interpret_line(&line)
                 } else {
                     true
@@ -91,17 +90,17 @@ fn create_readline_editor<R: HelpfulCommand>() -> Result<Editor<helper::MyHelper
 // aa47dc5f ends here
 
 // [[file:../gosh-shell.note::360871b3][360871b3]]
-impl<R: HelpfulCommand, A: Actionable> Interpreter<R, A> {
-    fn load_history(&mut self) -> Result<()> {
+impl<A: Actionable> Interpreter<A> {
+    fn load_history<R: HelpfulCommand>(&mut self, editor: &mut MyEditor<R>) -> Result<()> {
         if let Some(h) = self.history_file.as_ref() {
-            self.editor.load_history(h).context("no history")?;
+            editor.load_history(h).context("no history")?;
         }
         Ok(())
     }
 
-    fn save_history(&mut self) -> Result<()> {
+    fn save_history<R: HelpfulCommand>(&mut self, editor: &mut MyEditor<R>) -> Result<()> {
         if let Some(h) = self.history_file.as_ref() {
-            self.editor.save_history(h).context("write history file")?;
+            editor.save_history(h).context("write history file")?;
         }
         Ok(())
     }
@@ -109,7 +108,7 @@ impl<R: HelpfulCommand, A: Actionable> Interpreter<R, A> {
 // 360871b3 ends here
 
 // [[file:../gosh-shell.note::05b99d70][05b99d70]]
-impl<R: HelpfulCommand, A: Actionable> Interpreter<R, A> {
+impl<A: Actionable> Interpreter<A> {
     pub fn interpret_script(&mut self, script: &str) -> Result<()> {
         let lines = script.lines().filter(|s| !s.trim().is_empty());
         for line in lines {
@@ -164,19 +163,19 @@ impl<T: clap::CommandFactory> HelpfulCommand for T {
 // 9fdf556e ends here
 
 // [[file:../gosh-shell.note::f3bcb018][f3bcb018]]
-impl<R: HelpfulCommand, A: Actionable> Interpreter<R, A> {
+impl<A: Actionable> Interpreter<A> {
     #[track_caller]
     pub fn new(action: A) -> Self {
         Self {
             prompt: "> ".to_string(),
-            editor: create_readline_editor::<R>().unwrap(),
+            // editor: create_readline_editor::<R>().unwrap(),
             history_file: None,
             action,
         }
     }
 }
 
-impl<R: HelpfulCommand, A: Actionable> Interpreter<R, A> {
+impl<A: Actionable> Interpreter<A> {
     /// Set absolute path to history file for permanently storing command history.
     pub fn with_history_file<P: Into<PathBuf>>(mut self, path: P) -> Self {
         let p = path.into();
@@ -190,18 +189,20 @@ impl<R: HelpfulCommand, A: Actionable> Interpreter<R, A> {
         self
     }
 
-    pub fn start_repl(&mut self) -> Result<()> {
+    /// Entry point for REPL.
+    pub fn start_repl<R: HelpfulCommand>(&mut self) -> Result<()> {
         let version = env!("CARGO_PKG_VERSION");
         println!("This is the interactive parser, version {}.", version);
         println!("Enter \"help\" or \"?\" for a list of commands.");
         println!("Press Ctrl-D or enter \"quit\" or \"q\" to exit.");
         println!("");
 
-        let _ = self.load_history();
-        while self.continue_read_eval_print() {
+        let mut editor = create_readline_editor::<R>()?;
+        let _ = self.load_history(&mut editor);
+        while self.continue_read_eval_print(&mut editor) {
             trace!("excuted one loop");
         }
-        self.save_history()?;
+        self.save_history(&mut editor)?;
 
         Ok(())
     }
